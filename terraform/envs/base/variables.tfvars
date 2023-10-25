@@ -1,0 +1,5 @@
+setup_name  = "d1"
+creator     = "TungNT"
+env         = "base"
+rg_name     = "RG"
+rg_location = "japaneast"
