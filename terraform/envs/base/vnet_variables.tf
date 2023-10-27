@@ -1,5 +1,5 @@
 variable "address_space" {
-  default = ["10.0.0.0/16"]
+  default = "10.0.0.0/16"
 }
 variable "bgp_community" {
   default = null
@@ -15,51 +15,51 @@ variable "vnet_name" {
   default = "vnet"
 }
 
-variable "subnet" {
-  type = list(any)
-  default = [
-    {
-    subnet_name = "d1-base-AppGw-subnet"
-    address_prefixes = ["10.0.0.0/24"]
-    },
-    {
-    subnet_name = "d1-base-database-subnet"
-    address_prefixes = ["10.0.1.0/24"]
-    },
-    {
-    subnet_name = "d1-base-server-subnet"
-    address_prefixes = ["10.0.2.0/24"]
-    }
-  ]
+variable "appgw_name" {
+  default = "appgw-subnet"
 }
 
-variable "pip" {
-  type = list(any)
-  default = [
-    {
-      pip_name = "d1-base-AppGw-pip"
-      allocation_method = "Static"
-      az = ["1"]
-    },
-    {
-      pip_name = "d1-base-NAT-pip"
-      allocation_method = "Static"
-      az = ["1"]
-    },
-    {
-      pip_name = "d1-base-bastion-pip"
-      allocation_method = "Static"
-      az = ["1"]
-    }
-  ]
+variable "server_name" {
+  default = "server-subnet"
 }
-variable "nat" {
-  type = list(any)
-  default = [
-    {
-      nat_name = "d1-base-NAT"
-      sku      = "Standard"
-      az       = ["1"]
-    }
-  ]
+
+variable "database_name" {
+  default = "database-subnet"
+}
+
+variable "bastion_name" {
+  default = "bastion-subnet"
+}
+
+
+
+variable "allocation_method"{
+  type    = bool
+  default = true
+}
+
+variable "az" {
+  default = ["1"]
+}
+
+variable "nsg" {
+  default = "nsg"
+}
+
+variable "AppGw-IP" {
+  default = "AppGw-pip"
+}
+variable "NAT-IP" {
+  default = "NAT-pip"
+}
+variable "bastion-IP" {
+  default = "bastion-pip"
+}
+
+variable "nat_name" {
+  default = "NAT"
+}
+
+variable "sku" {
+  default = "Standard"
 }
