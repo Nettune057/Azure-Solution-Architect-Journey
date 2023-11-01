@@ -34,3 +34,4 @@ output "static_website_url" {
   value       = azurerm_storage_account.storeacc.primary_web_host
   description = "static web site URL from storage account"
 }
+
