@@ -2,3 +2,5 @@
 .terraform.lock.hcl
 .idea/
 artifacts/
+d1-base-basstion-key.pem
+d1-base-server-key.pem

@@ -10,6 +10,7 @@ resource "azurerm_subnet" "server_subnet" {
   name                 = var.server_subnet_name
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.vnet.name
+  service_endpoints = ["Microsoft.Storage"]
 }
 
 resource "azurerm_subnet" "database_subnet" {

@@ -1,5 +1,5 @@
 module "static-website-cdn" {
-  source  = "../../modules/terraform-azure-storage-account/"
+  source  = "../../modules/terraform-azure-storage-account-with-cdn/"
 
   sku                   = var.storacc_sku
   account_kind          = var.account_kind
