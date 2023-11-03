@@ -11,4 +11,4 @@ git config --global user.email ${useremail}
 git checkout ${branches}
 git add .
 git commit -m "${timecommit} Commit"
-git push ${push} ${branches}
+git push ${push} ${branches} --force
