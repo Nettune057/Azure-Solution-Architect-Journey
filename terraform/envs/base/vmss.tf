@@ -1,67 +1,63 @@
 resource "azurerm_orchestrated_virtual_machine_scale_set" "vmss" {
-  location                    = "japaneast"
-  name                        = "vmssflex"
-  platform_fault_domain_count = 1
-  resource_group_name         = "d1-base-RG"
-  zones                         = ["2","3"]
+  location                    = local.rg_location
+  name                        = "${local.prefix_name}-${var.vmss_name}"
+  platform_fault_domain_count = var.platform_fault_domain_count
+  resource_group_name         = local.rg_name
+  zones                         = var.vmss_zone
 
   os_disk {
-    caching              = "ReadWrite"
-    storage_account_type = "Standard_LRS"
-  }
-  source_image_reference {
-    offer     = "UbuntuServer"
-    publisher = "Canonical"
-    sku       = "18.04-LTS"
-    version   = "latest"
+    caching              = var.caching
+    storage_account_type = var.storage_account_os_type
   }
 }
 
 module "linux_server" {
   source = "../../modules/terraform-azure-bastion"
 
-  location                   = "japaneast"
-  image_os                   = "linux"
-  resource_group_name        = "d1-base-RG"
-  allow_extension_operations = false
-  boot_diagnostics           = false
+  location                   = var.rg_location
+  image_os                   = var.image_os
+  resource_group_name        = local.rg_name
+  allow_extension_operations = var.allow_extention_operations
+  boot_diagnostics           = var.boot_diagnostic_vmss
   new_network_interface = {
-    ip_forwarding_enabled = false
+    ip_forwarding_enabled = var.ip_forwarding_enabled
     ip_configurations = [
       {
         primary = true
       }
     ]
   }
-  admin_username = "azureuser"
+  admin_username = "${local.prefix_name}-${var.admin_username_server}"
   admin_ssh_keys = [
     {
       public_key = tls_private_key.ssh_serser.public_key_openssh
     }
   ]
-  name = "d1-base-server"
+  name = "${local.prefix_name}-${var.vmss_vm_name}"
   os_disk = {
-    caching              = "ReadWrite"
-    storage_account_type = "Standard_LRS"
+    caching              = var.caching
+    storage_account_type = var.storage_account_os_type
   }
-  zone                         = "2"
-  os_simple                    = "UbuntuServer"
-  size                         = "Standard_DS1_v2"
-  subnet_id                    = "/subscriptions/bdd42ea9-4917-426b-8e78-3a03b444f8e2/resourceGroups/d1-base-RG/providers/Microsoft.Network/virtualNetworks/d1-base-vnet/subnets/d1-base-server-subnet"
+  zone                         = var.vmss_vm_zone
+  os_simple                    = var.os_simple
+  size                         = var.size
+  subnet_id                    = module.vnet.server_subnet
   virtual_machine_scale_set_id = azurerm_orchestrated_virtual_machine_scale_set.vmss.id
+  custom_data                  = base64encode(data.template_file.linux-vm-cloud-init.rendered)
+  depends_on = [module.vnet]
 }
 
 resource "azurerm_network_interface_security_group_association" "vmss" {
   network_interface_id      = module.linux_server.network_interface_id
-  network_security_group_id = "/subscriptions/bdd42ea9-4917-426b-8e78-3a03b444f8e2/resourceGroups/d1-base-RG/providers/Microsoft.Network/networkSecurityGroups/d1-base-nsg"
+  network_security_group_id = module.vnet.network_security_group_id
 }
 
 resource "tls_private_key" "ssh_serser" {
-  algorithm = "RSA"
-  rsa_bits  = 2048
+  algorithm = var.algorithm
+  rsa_bits  = var.rsa_bits
 }
 
 resource "local_file" "ssh_private_key_server" {
-  filename = "./ssh-key/d1-base-server-key.pem"
+  filename = "./artifacts/ssh-key/d1-base-server-key.pem"
   content  = tls_private_key.ssh_serser.private_key_pem
 }

@@ -2,9 +2,9 @@
 # Local declarations
 #---------------------------
 locals {
-  frontend_port_name             = "appgw-${var.app_gateway_name}-${local.location}-feport"
-  frontend_ip_configuration_name = "appgw-${var.app_gateway_name}-${local.location}-feip"
-  gateway_ip_configuration_name  = "appgw-${var.app_gateway_name}-${local.location}-gwipc"
+  frontend_port_name             = "${var.app_gateway_name}"
+  frontend_ip_configuration_name = "${var.app_gateway_name}"
+  gateway_ip_configuration_name  = "${var.app_gateway_name}"
 
   resource_group_name = element(coalescelist(data.azurerm_resource_group.rgrp.*.name, azurerm_resource_group.rg.*.name, [""]), 0)
   location            = element(coalescelist(data.azurerm_resource_group.rgrp.*.location, azurerm_resource_group.rg.*.location, [""]), 0)
@@ -20,7 +20,7 @@ data "azurerm_resource_group" "rgrp" {
 
 resource "azurerm_resource_group" "rg" {
   count    = var.create_resource_group ? 1 : 0
-  name     = var.resource_group_name
+  name     = lower(var.resource_group_name)
   location = var.location
   tags     = merge({ "ResourceName" = format("%s", var.resource_group_name) }, var.tags, )
 }
@@ -39,7 +39,7 @@ data "azurerm_subnet" "snet" {
 data "azurerm_log_analytics_workspace" "logws" {
   count               = var.log_analytics_workspace_name != null ? 1 : 0
   name                = var.log_analytics_workspace_name
-  resource_group_name = local.resource_group_name
+  resource_group_name = var.resource_group_name
 }
 
 data "azurerm_storage_account" "storeacc" {
@@ -51,27 +51,18 @@ data "azurerm_storage_account" "storeacc" {
 #-----------------------------------
 # Public IP for application gateway
 #-----------------------------------
-resource "azurerm_public_ip" "pip" {
-  name                = lower("${var.app_gateway_name}-${local.location}-gw-pip")
-  location            = local.location
-  resource_group_name = local.resource_group_name
-  allocation_method   = var.sku.tier == "Standard" ? "Dynamic" : "Static"
-  sku                 = var.sku.tier == "Standard" ? "Basic" : "Standard"
-  domain_name_label   = var.domain_name_label
-  tags                = merge({ "ResourceName" = lower("${var.app_gateway_name}-${local.location}-gw-pip") }, var.tags, )
-}
 
 #----------------------------------------------
 # Application Gateway with all optional blocks
 #----------------------------------------------
 resource "azurerm_application_gateway" "main" {
-  name                = lower("appgw-${var.app_gateway_name}-${local.location}")
+  name                = lower("${var.app_gateway_name}")
   resource_group_name = local.resource_group_name
   location            = local.location
   enable_http2        = var.enable_http2
   zones               = var.zones
   firewall_policy_id  = var.firewall_policy_id != null ? var.firewall_policy_id : null
-  tags                = merge({ "ResourceName" = lower("appgw-${var.app_gateway_name}-${local.location}") }, var.tags, )
+  tags                = merge({ "ResourceName" = lower("${var.app_gateway_name}") }, var.tags, )
 
   sku {
     name     = var.sku.name
@@ -94,7 +85,7 @@ resource "azurerm_application_gateway" "main" {
 
   frontend_ip_configuration {
     name                          = local.frontend_ip_configuration_name
-    public_ip_address_id          = azurerm_public_ip.pip.id
+    public_ip_address_id          = var.public_ip_address_id
     private_ip_address            = var.private_ip_address != null ? var.private_ip_address : null
     private_ip_address_allocation = var.private_ip_address != null ? "Static" : null
     subnet_id                     = var.private_ip_address != null ? data.azurerm_subnet.snet.id : null
@@ -191,6 +182,7 @@ resource "azurerm_application_gateway" "main" {
   dynamic "request_routing_rule" {
     for_each = var.request_routing_rules
     content {
+      priority                    = lookup(request_routing_rule.value, "priority", null)
       name                        = request_routing_rule.value.name
       rule_type                   = lookup(request_routing_rule.value, "rule_type", "Basic")
       http_listener_name          = request_routing_rule.value.http_listener_name
@@ -437,7 +429,7 @@ resource "azurerm_application_gateway" "main" {
 resource "azurerm_monitor_diagnostic_setting" "pip-diag" {
   count                      = var.log_analytics_workspace_name != null || var.storage_account_name != null ? 1 : 0
   name                       = lower("pip-${var.app_gateway_name}-diag")
-  target_resource_id         = azurerm_public_ip.pip.id
+  target_resource_id         = var.public_ip_address_id
   storage_account_id         = var.storage_account_name != null ? data.azurerm_storage_account.storeacc.0.id : null
   log_analytics_workspace_id = data.azurerm_log_analytics_workspace.logws.0.id
 

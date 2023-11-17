@@ -9,3 +9,7 @@ output "bastion_pip" {
 output "nsg_id" {
   value = module.vnet.network_security_group_id
 }
+
+output "appgw_public_ip" {
+  value = module.vnet.appgw_public_ip_address_ip
+}

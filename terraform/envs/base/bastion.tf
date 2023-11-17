@@ -6,7 +6,7 @@ resource "tls_private_key" "ssh" {
 resource "local_file" "private_key" {
   count    = var.public_ssh_key == "" ? 1 : 0
   content  = tls_private_key.ssh.private_key_pem
-  filename = var.filename
+  filename = "./artifacts/ssh-key/d1-base-basstion-key.pem"
 }
 
 module "linux" {

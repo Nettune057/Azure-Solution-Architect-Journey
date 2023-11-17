@@ -8,6 +8,7 @@ output "network_interface_id" {
   value       = try(azurerm_network_interface.vm[0].id, null)
 }
 
+
 output "network_interface_private_ip" {
   description = "Private ip address of the vm nic that created by this module. `null` if `var.network_interface_ids` is provided."
   value       = try(azurerm_network_interface.vm[0].private_ip_address, null)
@@ -57,3 +58,4 @@ output "vm_zone" {
   description = "The Availability Zones in which this Virtual Machine is located."
   value       = local.virtual_machine.zone
 }
+

@@ -9,3 +9,5 @@ locals {
     rg_name         = "${local.prefix_name}-${var.rg_name}"
     rg_location     = var.rg_location
 }
+
+locals {}

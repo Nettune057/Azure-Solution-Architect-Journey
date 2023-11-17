@@ -1,6 +1,6 @@
 variable "create_resource_group" {
   description = "Whether to create resource group and use it for all networking resources"
-  default     = true
+  default     = false
 }
 
 variable "resource_group_name" {
@@ -12,6 +12,7 @@ variable "location" {
   description = "The location/region to keep all your network resources. To get the list of all locations with table format from azure cli, run 'az account list-locations -o table'"
   default     = ""
 }
+
 
 variable "virtual_network_name" {
   description = "The name of the virtual network"
@@ -31,6 +32,10 @@ variable "subnet_name" {
 variable "app_gateway_name" {
   description = "The name of the application gateway"
   default     = ""
+}
+
+variable "public_ip_address_id" {
+
 }
 
 variable "log_analytics_workspace_name" {
@@ -139,6 +144,7 @@ variable "http_listeners" {
 variable "request_routing_rules" {
   description = "List of Request routing rules to be used for listeners."
   type = list(object({
+    priority                    = number
     name                        = string
     rule_type                   = string
     http_listener_name          = string
